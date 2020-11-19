@@ -62,7 +62,7 @@ class Mat4 {
         this.mat = Array(4).fill(Array(4))
     }
 
-    // since we're really just taking in another vector to perform this transformation, no need for a full matrix
+    // since we're really just taking in another vector to perform this transformation, no need for a full mat4
     mul(v) {
         let res = [0, 0, 0, 1]
         res.map((_, n) => v.map((e1, j) => e1 * this.mat[n][j]).reduce((s, n) => s + n))
