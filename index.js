@@ -33,21 +33,34 @@ function beginRender() {
 
     var the = 0
     c.fillStyle = "#000000"
-    let s = new Solid(the)
-    let screenPts = s.points.map((e) => e.map((f) => [f[0] / f[2], f[1] / f[2]]))
+        // let s = new Solid(the)
+        // let screenPts = s.points.map((e) => e.map((f) => [f[0] / f[2], f[1] / f[2]]))
+
     let render = () => {
         c.clearRect(0, 0, width, height)
-
-        for (let i = 0; i < PREC; i++) {
-            for (let j = 0; j < PREC; j++) {
-
-
-                scrx = (screenPts[i][j][0] * width)
-                scry = (1 - (screenPts[i][j][1] + 1) / 2) * height
-                    //console.log(scrx, scry)
-                c.fillRect(scrx, scry, 2, 2)
+        let s = new Cube(the)
+        let screenPts = s.points.map(e => [(e[0] + 2) / (e[2] + 4), (e[1] - 1.3) / (e[2] + 4)])
+        for (var i = 0; i < 36; i += 3) {
+            let ox = (screenPts[i][0] * width)
+            let oy = -((screenPts[i][1])) * height
+            c.beginPath()
+            c.moveTo(ox, oy)
+            for (var j = 1; j < 3; j++) {
+                scrx = (screenPts[i + j][0] * width)
+                scry = -((screenPts[i + j][1])) * height
+                c.lineTo(scrx, scry)
+                c.fillRect(scrx, scry, 4, 4)
             }
+            c.lineTo(ox, oy)
+            c.stroke()
         }
+        // for (let i = 0; i < PREC; i++) {
+        //     for (let j = 0; j < PREC; j++) {
+        //         scrx = (screenPts[i][j][0] * width)
+        //         scry = (1 - (screenPts[i][j][1] + 1) / 2) * height
+        //         c.fillRect(scrx, scry, 2, 2)
+        //     }
+        // }
         the += 0.04
         setTimeout(() => requestAnimationFrame(render), 100);
     }
@@ -64,7 +77,6 @@ class Solid {
                 let v = (b1 - b0) * (j / PREC)
                 this.points[i][j] = [this.x(u, v), this.y(u, v), this.z(u, v), 1]
                 this.points[i][j] = [this.points[i][j][0] * cos(the) + this.points[i][j][2] * sin(the), this.points[i][j][1], -this.points[i][j][0] * sin(the) + cos(the) * this.points[i][j][2]]
-
             }
         }
     }
@@ -78,6 +90,74 @@ class Solid {
 
     z(u, v) {
         return 5 + (2 + cos(v)) * sin(u) // this.r * sin(v) * sin(u) + this.r * 2
+    }
+}
+
+/*
+          
+   0,1,1    +---------+ 1,1,1
+           /|        /|
+          / |       / |
+         /  |      /  |  
+  0,1,0 +---------+   + 1,0,1  
+        |  /0,0,1 |  /
+        | /       | / 1,1,0 (top right, front)
+        |/        |/
+        +---------+
+    0,0,0        1,0,0
+*/
+class Cube {
+    points = [
+        // bottom face
+        [0, 0, 0],
+        [0, 0, 1],
+        [1, 0, 0],
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 0, 0],
+        //front face
+        [0, 0, 0],
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 1, 0],
+        [1, 1, 0],
+        [1, 0, 0],
+        //left face
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        // right face
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 0, 1],
+        [1, 0, 1],
+        [1, 1, 0],
+        [1, 1, 1],
+        // top face
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, 1, 0],
+        [1, 1, 1],
+        [0, 1, 1],
+        [1, 1, 0],
+        // back face
+        [0, 0, 1],
+        [1, 1, 1],
+        [1, 0, 1],
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1]
+    ]
+    constructor(the) {
+        for (var i = 0; i < 36; i++) {
+            this.points[i][0] -= 0.5
+            this.points[i][1] -= 0.5
+            this.points[i][2] -= 0.5
+            this.points[i] = [this.points[i][0] * cos(the) + this.points[i][2] * sin(the), this.points[i][1], -this.points[i][0] * sin(the) + cos(the) * this.points[i][2]]
+        }
     }
 }
 
