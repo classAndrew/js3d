@@ -5,6 +5,7 @@ const im = document.querySelector("#texture");
 const sc = scratchCanvas.getContext("2d");
 const [sw, sh] = [scratchCanvas.width, scratchCanvas.height];
 sc.drawImage(im, 0, 0);
+const texture = sc.getImageData(0, 0, im.width, im.height).data
 const { width, height } = canvas;
 // rasterizing step by
 const rastStep = 5;
@@ -14,10 +15,12 @@ const pixSize = rastStep + 1;
 var ptmap = {
     a: [220, 500, 255, 0, 0, 0, 0],
     b: [268, 134, 0, 0, 255, 1, 0],
-    c: [600, 200, 0, 255, 0, 0, 1]
+    c: [600, 200, 0, 255, 0, 0, 1],
+    d: [600, 400, 0, 0, 0, 1, 1]
 };
 
 ptsY = [ptmap.a, ptmap.b, ptmap.c];
+pts2 = [ptmap.b, ptmap.c, ptmap.d]
 ptsY.sort((a, b) => a[1] - b[1]);
 
 // code for moving points 2d on screen
@@ -83,7 +86,7 @@ class Slope {
 function draw() {
     c.clearRect(0, 0, 1000, 1000);
     drawScreen();
-    setTimeout(() => requestAnimationFrame(draw), 1000000);
+    setTimeout(() => requestAnimationFrame(draw), 10);
 }
 requestAnimationFrame(draw);
 
@@ -95,6 +98,7 @@ function lerp(a, b, q) {
 function drawScreen() {
     c.fillStyle = "#000000";
     rasterizeTriangle(ptsY);
+    rasterizeTriangle(pts2);
 }
 
 function rasterizeTriangle(ptsY) {
@@ -169,9 +173,13 @@ function fragment(wv1, wv2, wv3, x, y, ptsY) {
     let r = Math.floor(wv1 * ptsY[0][2] + wv2 * ptsY[1][2] + wv3 * ptsY[2][2]);
     let g = Math.floor(wv1 * ptsY[0][3] + wv2 * ptsY[1][3] + wv3 * ptsY[2][3]);
     let b = Math.floor(wv1 * ptsY[0][4] + wv2 * ptsY[1][4] + wv3 * ptsY[2][4]);
-    // let s16 = Math.floor(0x100 * (x - startX) / (endX - startX)).toString(16)
+    // sample image for pixel
+    let texci = Math.floor(im.height * (wv1 * ptsY[0][5] + wv2 * ptsY[1][5] + wv3 * ptsY[2][5]));
+    let texcj = Math.floor(im.width * (wv1 * ptsY[0][6] + wv2 * ptsY[1][6] + wv3 * ptsY[2][6]));
+    r = texture[texci * im.width * 4 + texcj * 4];
+    g = texture[texci * im.width * 4 + texcj * 4 + 1];
+    b = texture[texci * im.width * 4 + texcj * 4 + 2];
     let s16 = ((r << 16) + (g << 8) + b).toString(16);
-
     c.fillStyle = "#" + "0".repeat(6 - s16.length) + s16;
 
     c.fillRect(x, y, pixSize, pixSize);
