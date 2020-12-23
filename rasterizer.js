@@ -1,14 +1,20 @@
 const canvas = document.querySelector("#cv");
-
+const scratchCanvas = document.querySelector("#scratch");
+const c = canvas.getContext('2d');
+const im = document.querySelector("#texture");
+const sc = scratchCanvas.getContext("2d");
+const [sw, sh] = [scratchCanvas.width, scratchCanvas.height];
+sc.drawImage(im, 0, 0);
+const { width, height } = canvas;
 // rasterizing step by
 const rastStep = 5;
 // pixel size
 const pixSize = rastStep + 1;
 
 var ptmap = {
-    a: [220, 500, 255, 0, 0],
-    b: [268, 134, 0, 0, 255],
-    c: [600, 200, 0, 255, 0]
+    a: [220, 500, 255, 0, 0, 0, 0],
+    b: [268, 134, 0, 0, 255, 1, 0],
+    c: [600, 200, 0, 255, 0, 0, 1]
 };
 
 ptsY = [ptmap.a, ptmap.b, ptmap.c];
@@ -73,14 +79,11 @@ class Slope {
     }
 }
 
-const c = canvas.getContext('2d');
-const { width, height } = canvas;
-
 // takes screen coordinates
 function draw() {
     c.clearRect(0, 0, 1000, 1000);
     drawScreen();
-    setTimeout(() => requestAnimationFrame(draw), 10);
+    setTimeout(() => requestAnimationFrame(draw), 1000000);
 }
 requestAnimationFrame(draw);
 
