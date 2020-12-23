@@ -1,12 +1,12 @@
-const canvas = document.querySelector("#cv");
+// const canvas = document.querySelector("#cv");
 const scratchCanvas = document.querySelector("#scratch");
-const c = canvas.getContext('2d');
+// const c = canvas.getContext('2d');
 const im = document.querySelector("#texture");
 const sc = scratchCanvas.getContext("2d");
 const [sw, sh] = [scratchCanvas.width, scratchCanvas.height];
 sc.drawImage(im, 0, 0);
-const texture = sc.getImageData(0, 0, im.width, im.height).data
-const { width, height } = canvas;
+const texture = sc.getImageData(0, 0, im.width, im.height).data;
+// const { width, height } = canvas;
 // rasterizing step by
 const rastStep = 5;
 // pixel size
@@ -84,9 +84,9 @@ class Slope {
 
 // takes screen coordinates
 function draw() {
-    c.clearRect(0, 0, 1000, 1000);
-    drawScreen();
-    setTimeout(() => requestAnimationFrame(draw), 10);
+    // c.clearRect(0, 0, 1000, 1000);
+    // drawScreen();
+    // setTimeout(() => requestAnimationFrame(draw), 10);
 }
 requestAnimationFrame(draw);
 
@@ -97,8 +97,8 @@ function lerp(a, b, q) {
 
 function drawScreen() {
     c.fillStyle = "#000000";
-    rasterizeTriangle(ptsY);
-    rasterizeTriangle(pts2);
+    // rasterizeTriangle(ptsY);
+    // rasterizeTriangle(pts2);
 }
 
 function rasterizeTriangle(ptsY) {

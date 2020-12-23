@@ -27,58 +27,19 @@ function main() {
     beginRender()
 }
 
-class Camera {
-    z = 4;
-    x = 2;
-    y = 1.3;
-    pitch = 0;
-    yaw = 0;
-    speed = 0.005;
-
-    constructor(x, y, z, pitch, yaw, speed) {
-        Object.assign(this, { x, y, z, pitch, yaw, speed });
-    }
-
-    getViewMat() {
-
-    }
-}
-
-var keymap = {
-    w: false,
-    a: false,
-    s: false,
-    d: false,
-    shift: false,
-    ' ': false,
-}
-
-var cam = new Camera(-2, 1.3, -4, 0, 0, 0.005);
-
-document.onkeydown = e => {
-    keymap[e.key.toLowerCase()] = true;
-    if (e.key == ' ') e.preventDefault();
-}
-
-document.onkeyup = e => {
-    keymap[e.key.toLowerCase()] = false;
-}
-
 function beginRender() {
 
     // console.log("[" + s.points.map((e) => e.map(b => b[0])).flatMap(e => e).join(", ") + "]" + "," + "[" + s.points.map((e) => e.map(b => b[1])).flatMap(e => e).join(", ") + "]" + ", " + "[" + s.points.map((e) => e.map(b => b[2])).flatMap(e => e).join(", ") + "]")
 
-    var the = 0;
-    c.fillStyle = "#000000";
+    var the = 0
+    c.fillStyle = "#000000"
+        // let s = new Solid(the)
+        // let screenPts = s.points.map((e) => e.map((f) => [f[0] / f[2], f[1] / f[2]]))
 
-    var dt = 0.1;
-    var lastTime = 0;
     let render = () => {
-        dt = Date.now() - lastTime;
-        lastTime = Date.now();
         c.clearRect(0, 0, width, height)
         let s = new Cube(the)
-        let screenPts = s.points.map(e => [(e[0] - cam.x) / (e[2] - cam.z), (e[1] - cam.y) / (e[2] - cam.z)])
+        let screenPts = s.points.map(e => [(e[0] + 2) / (e[2] + 4), (e[1] - 1.3) / (e[2] + 4)])
         for (var i = 0; i < 36; i += 3) {
             let ox = (screenPts[i][0] * width)
             let oy = -((screenPts[i][1])) * height
@@ -93,23 +54,15 @@ function beginRender() {
             c.lineTo(ox, oy)
             c.stroke()
         }
-
+        // for (let i = 0; i < PREC; i++) {
+        //     for (let j = 0; j < PREC; j++) {
+        //         scrx = (screenPts[i][j][0] * width)
+        //         scry = (1 - (screenPts[i][j][1] + 1) / 2) * height
+        //         c.fillRect(scrx, scry, 2, 2)
+        //     }
+        // }
         the += 0.04
-        if (keymap.w) {
-            cam.z += cam.speed * dt;
-        }
-        if (keymap.s) {
-            cam.z -= cam.speed * dt;
-        }
-        if (keymap.a) {
-            cam.x -= cam.speed * dt;
-        }
-        if (keymap.d) {
-            cam.x += cam.speed * dt;
-        }
-        if (keymap.shift) cam.y -= cam.speed * dt * 0.8;
-        if (keymap[' ']) cam.y += cam.speed * dt * 0.8;
-        setTimeout(() => requestAnimationFrame(render), 50);
+        setTimeout(() => requestAnimationFrame(render), 100);
     }
     requestAnimationFrame(render)
 }
