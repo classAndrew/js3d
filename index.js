@@ -34,14 +34,31 @@ class Camera {
     pitch = 0;
     yaw = 0;
     speed = 0.005;
-
+    dir = [0, 0, 1];
+    up = [0, 1, 0]
     constructor(x, y, z, pitch, yaw, speed) {
         Object.assign(this, { x, y, z, pitch, yaw, speed });
     }
 
     getViewMat() {
-
+        // find lookat matrix
+        let view = new Mat4();
+        view.m[0][0] = pitch;
+        view.m[0][2] = yaw;
+        view.m[1][0] = up[0];
+        view.m[1][1] = up[1];
+        view.m[1][2] = up[2];
+        view.m[2][0] = dir[0];
+        view.m[2][1] = dir[1];
+        view.m[2][2] = dir[2];
+        view.m[3][3] = 1;
+        let coeMat = Mat4.identity();
+        coeMat.m[0][3] = -this.x;
+        coeMat.m[1][3] = -this.x;
+        coeMat.m[2][3] = -this.x;
+        return view.mul(coeMat);
     }
+
 }
 
 var keymap = {
@@ -77,16 +94,18 @@ function beginRender() {
         dt = Date.now() - lastTime;
         lastTime = Date.now();
         c.clearRect(0, 0, width, height)
-        let s = new Cube(the)
+        let s = new Cube(the);
+        // apply world transformations: translate, rotate about camera
         let screenPts = s.points.map(e => [(e[0] - cam.x) / (e[2] - cam.z), (e[1] - cam.y) / (e[2] - cam.z)])
+
         for (var i = 0; i < 36; i += 3) {
             let ox = (screenPts[i][0] * width)
-            let oy = -((screenPts[i][1])) * height
+            let oy = -(screenPts[i][1]) * height
             c.beginPath()
             c.moveTo(ox, oy)
             for (var j = 1; j < 3; j++) {
                 scrx = (screenPts[i + j][0] * width)
-                scry = -((screenPts[i + j][1])) * height
+                scry = -(screenPts[i + j][1]) * height
                 c.lineTo(scrx, scry)
                 c.fillRect(scrx, scry, 4, 4)
             }
@@ -112,32 +131,6 @@ function beginRender() {
         setTimeout(() => requestAnimationFrame(render), 50);
     }
     requestAnimationFrame(render)
-}
-
-class Solid {
-    points = [...Array(PREC)].map(_ => Array(PREC))
-    r = 10
-    constructor(the) {
-        for (let i = 0; i < PREC; i++) {
-            let u = (a1 - a0) * (i / PREC)
-            for (let j = 0; j < PREC; j++) {
-                let v = (b1 - b0) * (j / PREC)
-                this.points[i][j] = [this.x(u, v), this.y(u, v), this.z(u, v), 1]
-                this.points[i][j] = [this.points[i][j][0] * cos(the) + this.points[i][j][2] * sin(the), this.points[i][j][1], -this.points[i][j][0] * sin(the) + cos(the) * this.points[i][j][2]]
-            }
-        }
-    }
-    x(u, v) {
-        return (2 + cos(v)) * cos(u) + 2 // this.r * sin(v) * cos(u)
-    }
-
-    y(u, v) {
-        return sin(v) // this.r * cos(v)
-    }
-
-    z(u, v) {
-        return 5 + (2 + cos(v)) * sin(u) // this.r * sin(v) * sin(u) + this.r * 2
-    }
 }
 
 /*
@@ -224,6 +217,32 @@ class Mat4 {
         let m = new Mat4()
         for (let i = 0; i < 4; i++) m.mat[i][i] = 1;
         return m;
+    }
+}
+
+class Solid {
+    points = [...Array(PREC)].map(_ => Array(PREC))
+    r = 10
+    constructor(the) {
+        for (let i = 0; i < PREC; i++) {
+            let u = (a1 - a0) * (i / PREC)
+            for (let j = 0; j < PREC; j++) {
+                let v = (b1 - b0) * (j / PREC)
+                this.points[i][j] = [this.x(u, v), this.y(u, v), this.z(u, v), 1]
+                this.points[i][j] = [this.points[i][j][0] * cos(the) + this.points[i][j][2] * sin(the), this.points[i][j][1], -this.points[i][j][0] * sin(the) + cos(the) * this.points[i][j][2]]
+            }
+        }
+    }
+    x(u, v) {
+        return (2 + cos(v)) * cos(u) + 2 // this.r * sin(v) * cos(u)
+    }
+
+    y(u, v) {
+        return sin(v) // this.r * cos(v)
+    }
+
+    z(u, v) {
+        return 5 + (2 + cos(v)) * sin(u) // this.r * sin(v) * sin(u) + this.r * 2
     }
 }
 
