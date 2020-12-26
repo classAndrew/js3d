@@ -3,9 +3,9 @@ const c = canvas.getContext("2d")
 const { PI, cos, sin, tan } = Math
 const { width, height } = canvas
 const [a0, a1, b0, b1] = [0, 2 * PI, 0, 2 * PI]
-const FOV = 1 / tan(PI / 3 / 2)
-const ASPECTRATIO = width / height
-const [NEAR, FAR] = [0, 10]
+const FOV = PI / 4;
+const ASPECTRATIO = width / height;
+var [NEAR, FAR] = [0.0, 100];
 const PREC = 80;
 
 /*
@@ -39,8 +39,8 @@ function cross(vec1, vec2) {
 }
 
 class Camera {
-    z = 4;
-    x = 2;
+    z = -1;
+    x = -1;
     y = 1.3;
     pitch = 0;
     yaw = PI / 2;
@@ -49,8 +49,8 @@ class Camera {
     worldUp = [0, 1, 0];
     up = this.worldUp;
     right = normalized(cross(this.up, this.dir));
-    constructor(x, y, z, pitch, yaw, speed) {
-        Object.assign(this, { x, y, z, pitch, yaw, speed });
+    constructor(x, y, z, yaw, pitch, speed) {
+        Object.assign(this, { x, y, z, yaw, pitch, speed });
     }
 
     getViewMat() {
@@ -71,6 +71,20 @@ class Camera {
         coeMat.m[1][3] = -this.y;
         coeMat.m[2][3] = -this.z;
         return view.mmul(coeMat);
+    }
+
+    getProjection() {
+        let mat = new Mat4();
+        var f = Math.tan(Math.PI * 0.5 - 0.5 * Math.PI / 4);
+        var rangeInv = 1.0 / (NEAR - FAR);
+        mat.m[0][0] = 1;
+        mat.m[1][1] = 1;
+        mat.m[2][2] = 1;
+        mat.m[3][2] = 1;
+        mat.m[2][3] = 1;
+        // mat.m[3][3] = 1;
+        // console.log(mat);
+        return mat;
     }
 
     updateVecs() {
@@ -104,7 +118,7 @@ var keymap = {
     lastMouseY: 0
 }
 
-var cam = new Camera(-2, 1.3, -4, 0, PI / 2, 0.005);
+var cam = new Camera(-2, 1.3, -4, PI / 2, 0, 0.005);
 
 document.onkeydown = e => {
     keymap[e.key.toLowerCase()] = true;
@@ -115,19 +129,14 @@ document.onkeyup = e => {
     keymap[e.key.toLowerCase()] = false;
 }
 
-
-document.addEventListener("onmousemove", e => {
-    cam.yaw += e.movementX * 0.05;
-    keymap.lastMouseX = e.x;
-}, false);
-
 document.addEventListener('pointerlockchange', lockChange, false);
 
 function lockChange() {
     if (document.pointerLockElement === canvas) {
         document.addEventListener("mousemove", (e) => {
-            cam.yaw -= e.movementX * 0.002;
-            cam.pitch -= e.movementY * 0.002;
+            cam.yaw -= e.movementX * 0.001;
+            cam.pitch -= e.movementY * 0.001;
+            // console.log(cam.yaw, cam.pitch);
         }, false);
     }
 }
@@ -151,24 +160,42 @@ function beginRender() {
         c.clearRect(0, 0, width, height)
         let s = new Cube(the);
         // apply world transformations: translate, rotate about camera
+        // projection matrix
         let view = cam.getViewMat();
-        let screenPts = s.points.map(e => view.vmul([e[0], e[1], e[2], 1]));
-        screenPts = screenPts.map(e => [(e[0]) / (e[2]), (e[1]) / (e[2])]);
+        let screenPts = s.points.map(e => [e[0], e[1], e[2], 1]);
+
+        let clip = cam.getProjection();
+        // view = view.mmul(clip);
+        clip = clip.mmul(view);
+        // screenPts = screenPts.map(e => view.vmul(e));
+        screenPts = screenPts.map(e => clip.vmul(e));
+        // console.log(screenPts);
+        // console.log(screenPts);
+        screenPts = screenPts.filter(e => (e[3] > 0));
+
+        // screenPts = screenPts.filter(e => (e[3] > 0));
+        screenPts = screenPts.map(e => [e[0] / (e[3]), e[1] / (e[3]), e[2] / (e[3])]);
+        //
+        // screenPts = screenPts.map(e => [(e[0]) / (e[2]), (e[1]) / (e[2])]);
+        // console.log(screenPts);
         // all the height/2 and width/2 additions is just the viewport transform
-        for (var i = 0; i < 36; i += 3) {
-            let ox = (screenPts[i][0] * width)
-            let oy = -(screenPts[i][1]) * height
-            c.beginPath()
-            c.moveTo(ox + width / 2, oy + height / 2)
-            for (var j = 1; j < 3; j++) {
-                scrx = (screenPts[i + j][0] * width)
-                scry = -(screenPts[i + j][1]) * height
-                c.lineTo(scrx + width / 2, scry + height / 2)
-                c.fillRect(scrx + width / 2, scry + height / 2, 4, 4)
+        if (screenPts.length == 36) {
+            for (var i = 0; i < 36; i += 3) {
+                let ox = (screenPts[i][0] * width)
+                let oy = -(screenPts[i][1]) * height
+                c.beginPath()
+                c.moveTo(ox + width / 2, oy + height / 2)
+                for (var j = 1; j < 3; j++) {
+                    scrx = (screenPts[i + j][0] * width)
+                    scry = -(screenPts[i + j][1]) * height
+                    c.lineTo(scrx + width / 2, scry + height / 2)
+                    c.fillRect(scrx + width / 2, scry + height / 2, 4, 4)
+                }
+                c.lineTo(ox + width / 2, oy + height / 2)
+                c.stroke()
             }
-            c.lineTo(ox + width / 2, oy + height / 2)
-            c.stroke()
         }
+
 
         // the += 0.04
         if (keymap.w) {
@@ -285,6 +312,15 @@ class Mat4 {
         let m = new Mat4()
         for (let i = 0; i < 4; i++) m.m[i][i] = 1;
         return m;
+    }
+    static clip() {
+        let mat = new Mat4();
+        mat.m[0][0] = 1 / (ASPECTRATIO * tan(FOV / 2));
+        mat.m[1][1] = 1 / tan(FOV / 2);
+        mat.m[2][2] = (-NEAR - FAR) / (NEAR - FAR);
+        mat.m[2][3] = 2 * FAR * NEAR / (NEAR - FAR);
+        mat.m[3][2] = 1;
+        return mat;
     }
 }
 
